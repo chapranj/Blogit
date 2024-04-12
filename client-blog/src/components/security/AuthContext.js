@@ -6,8 +6,6 @@ export const AuthContext = createContext();
 
 export const useAuth = ()=> useContext(AuthContext);
 
-
-
 export const authReducer = (state, action)=>{
     switch(action.type){
         case 'LOGIN':
@@ -47,7 +45,6 @@ export default function AuthProvider({ children }) {
     }
 
     return (
-
         //we use the spread operator to give direct access to properties inside the current state object to other components
         // otherwise we would send a state object and that would require us to write state.user everywhere we had to 
         // now we can deconstruct user from the useAuth()

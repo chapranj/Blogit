@@ -4,8 +4,13 @@ import { useFormik } from "formik";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./security/AuthContext";
 
+import * as Yup from 'yup';
+
 export default function CreateBlog() {
-  const [preview, setPreview] = useState('');
+  const [previews, setPreviews] = useState([]);
+  const [registeredUsers, setRegisteredUsers] = useState([])
+  const [selectedUser, setselectedUser] = useState('')
+  const [formError, setFormError] = useState('');
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -13,21 +18,51 @@ export default function CreateBlog() {
     if (!user) {
       navigate('/login')
     }
+    else {
+      getRegisteredUsers()
+    }
   }, [user])
 
+
+
+  const getRegisteredUsers = async () => {
+    try {
+      const userEmails = await axios.get(`http://localhost:3000/user/allUsers`)
+      console.log(userEmails.data.users)
+      setRegisteredUsers(userEmails.data.users)
+    }
+    catch (error) {
+      console.log(error)
+    }
+  }
+
+  const ticketUploadValidation = Yup.object().shape({
+    title: Yup.string().required('Title is required!'),
+    body: Yup.string().required('Please give a description!'),
+    assignedTo: Yup.string().required('Assign this ticket to someone!')
+  });
 
 
   const formik = useFormik({
     initialValues: {
       title: '',
-      snippet: null,
+      snippet: [],
+      assignedTo: '',
       body: ''
     },
+
+    validationSchema: ticketUploadValidation,
+
     onSubmit: async (values) => {
+      console.log('submitting')
+      console.log(values)
       const formData = new FormData();
       formData.append("title", values.title);
       formData.append("body", values.body);
-      formData.append("snippet", values.snippet);
+      values.snippet.forEach((file) => { formData.append("snippet", file) })
+      formData.append("assignedTo", values.assignedTo);
+      formData.append("createdBy", user.userId)
+
       try {
         const response = await axios.post(`http://localhost:3000/blogs`, formData, {
           headers: {
@@ -38,11 +73,15 @@ export default function CreateBlog() {
           console.log(response.data)
         }
         navigate('/');
-      } catch {
-        console.log("Error!");
+      } catch (errors) {
+        console.log(errors);
       }
     }
   });
+
+  useEffect(() => {
+    console.log(formik.errors);
+  }, [formik.errors]);
 
   return (
     <div className="container mx-auto m-5">
@@ -57,34 +96,65 @@ export default function CreateBlog() {
             className="form-input px-4 py-2 rounded border focus:outline-none focus:border-indigo-600"
           />
         </div>
+        {formik.errors.title && <div>{formik.errors.title}</div>}
         <div className="mb-4">
           <label htmlFor="snippet" className="block text-sm font-medium text-gray-700 mb-2">Snippet</label>
           <input
             id="snippet"
             name="snippet"
             type="file"
+            multiple
             onChange={(e) => {
-              let reader = new FileReader();
-              reader.onload = () => {
-                if (reader.readyState === 2) {
-                  setPreview(reader.result);
-                  formik.setFieldValue("snippet", reader.result);
-                }
-              };
-              reader.readAsDataURL(e.target.files[0]);
+              setPreviews([])
+              let imageArray = []
+              Array.from(e.target.files).forEach((file) => {
+                let reader = new FileReader();
+
+                reader.onload = () => {
+                  if (reader.readyState === 2) {
+                    // console.log(reader.result);
+                    setPreviews(
+                      (prevPreviews) => [...prevPreviews, reader.result]
+                    )
+                    imageArray.push(reader.result);
+                  }
+                };
+                reader.readAsDataURL(file);
+              });
+              formik.setFieldValue("snippet", imageArray);
+              console.log(imageArray)
             }}
             className="form-input"
           />
         </div>
-        {preview && <img src={preview} width="100" height="30" className="mr-4" />}
+        {previews.map((preview, index) => (
+          <img key={index} src={preview} width="100" height="30" className="mr-4" />
+        ))}
         <div className="mb-4">
           <label htmlFor="body" className="block text-sm font-medium text-gray-700 mb-2">Body</label>
           <textarea
             id="body"
             {...formik.getFieldProps('body')}
-            rows="6"
-            className="form-textarea px-4 py-2 rounded border focus:outline-none focus:border-indigo-600"
+            rows="8"
+            className="form-textarea px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:border-indigo-600 text-base"
           ></textarea>
+        </div>
+        {formik.errors.body && <div>{formik.errors.body}</div>}
+        <div>
+          <label htmlFor="assignedTo">Assign To</label>
+          <select name="assignedTo" 
+          id="assignedTo" 
+          {...formik.getFieldProps('assignedTo')}>
+            <option value="" disabled hidden>
+              Select Member
+            </option>
+            {registeredUsers.map((user, index) => (
+              <option key={index} value={user._id}>
+                {user.email}
+              </option>
+            ))}
+          </select>
+          {formik.errors.assignedTo && selectedUser === '' && <div>{formik.errors.assignedTo}</div>}
         </div>
         <div className="mb-4 flex items-center">
           <button

@@ -21,8 +21,6 @@ export default function Login() {
         }
     })
 
-    console.log("user in Login Component: " + user);
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         await login(email, password);

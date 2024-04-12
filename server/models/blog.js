@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const User = require('./userModel');
 const Schema = mongoose.Schema;
 
 const blogSchema = new Schema({
@@ -7,12 +8,22 @@ const blogSchema = new Schema({
         required: true
     },
     snippet: {
-        type: String,
+        type: [String],
         required: false
     },
     body:{
         type: String,
         required: true
+    },
+    createdBy:{
+        type: Schema.Types.ObjectId,
+        required: true,
+        ref:'User'
+    },
+    assignedTo:{
+        type: Schema.Types.ObjectId, 
+        required: true,
+        ref: 'User'
     }
 }, {timestamps: true});
 
@@ -20,7 +31,7 @@ const blogSchema = new Schema({
 const ticketPostSchema = new Schema ({
     ticketId: {
         type: Schema.Types.ObjectId,
-        ref: 'Blog', // Reference to the Blog model
+        ref: 'Blog',
         required: true
     },
     content: {
@@ -28,16 +39,15 @@ const ticketPostSchema = new Schema ({
         required: true
     },
     postedBy:{
-        type:String,
+        type:Schema.Types.ObjectId,
+        ref: 'User',
         required:true
     }
 
 },{timestamps:true});
-//
 
 const Blog = mongoose.model('Blog', blogSchema);
 const TicketPost = mongoose.model('TicketPost', ticketPostSchema);
-
 
 module.exports = {
     BlogObj : Blog,

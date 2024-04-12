@@ -4,9 +4,6 @@ const Schema = mongoose.Schema;
 const bcrypt = require('bcrypt');
 const validator = require('validator')
 
-
-
-
 const userSchema = new Schema({
     email: {
         type: String,
@@ -16,11 +13,16 @@ const userSchema = new Schema({
     password: {
         type: String,
         required: true,
+    },
+    role: {
+        type: String, 
+        enum: ['user', 'admin'],
+        default: 'user'
     }
 })
 
 //static signup method
-userSchema.statics.signup = async function (email, password) {
+userSchema.statics.signup = async function (email, password, role) {
     //validation
     if (!email || !password) {
         throw Error('All Fields must be filled!');
@@ -40,8 +42,8 @@ userSchema.statics.signup = async function (email, password) {
     }
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(password, salt);
-
-    const user = await this.create({ email, password: hash })
+    console.log("in static signup: "+role)
+    const user = await this.create({ email, password: hash, role})
 
     return user;
 
@@ -65,12 +67,12 @@ userSchema.statics.login = async function (email, password) {
         throw Error('Incorrect Password');
     }
 
+    console.log(user)
+
     return user;
 }
 
 const User = mongoose.model('User', userSchema);
 
 
-module.exports = {
-    User
-}
+module.exports = User;

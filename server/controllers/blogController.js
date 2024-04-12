@@ -2,7 +2,10 @@ const { BlogObj, TicketPostObj } = require('../models/blog');
 const upload = require('../app')
 
 const blog_index = (req, res) => {
-    BlogObj.find().sort({ createdAt: -1 })
+    BlogObj.find()
+        .populate('createdBy')
+        .populate('assignedTo')
+        .sort({ createdAt: -1 })
         .then(
             (response) => {
                 res.send(response);
@@ -34,7 +37,8 @@ const postTicketPost = (req, res) => {
 }
 
 const getTicketPost = (req, res) => {
-    TicketPostObj.find({ ticketId: req.params.id }).sort({ createdAt: -1 })
+    TicketPostObj.find({ ticketId: req.params.id })
+        .populate('postedBy')
         .then(
             (response) => {
                 console.log(req)
@@ -67,12 +71,22 @@ const deleteTicketPost = (req, res) => {
 }
 
 const blogPost = (req, res) => {
-    const { title, snippet, body } = req.body;
-    if (!title || !snippet || !body) {
+    const { title, snippet, body, assignedTo, createdBy } = req.body;
+
+    console.log(req.body)
+    // const snippets = req.files.map(file=>({filename:file.filename, path:file.path}));
+    if (!title || !body || !assignedTo || !createdBy) {
         return res.status(400).json({ error: "Missing required fields!" })
     }
-    const blog = new BlogObj(req.body);
-    console.log(req.body);
+    const blog = new BlogObj({
+        title: title,
+        snippet: snippet,
+        body: body,
+        assignedTo: assignedTo,
+        createdBy: createdBy
+    });
+    console.log("yes")
+    console.log(blog)
     blog.save()
         .then(
             (response) => {
@@ -101,18 +115,18 @@ const getBlogById = (req, res) => {
         )
 }
 
- const deleteBlogById = async (req, res) => {
+const deleteBlogById = async (req, res) => {
     const id = req.params.id;
-    try{
+    try {
         await BlogObj.findByIdAndDelete(id);
 
-        await TicketPostObj.deleteMany({ticketId: id});
+        await TicketPostObj.deleteMany({ ticketId: id });
 
-        res.status(200).json({success: true, message: 'Blog and associated ticket posts deleted successfully! '});
+        res.status(200).json({ success: true, message: 'Blog and associated ticket posts deleted successfully! ' });
     }
-    catch(error){
+    catch (error) {
         console.log(error)
-        res.status(500).json({error: 'Internal server error!'})
+        res.status(500).json({ error: 'Internal server error!' })
     }
 }
 

@@ -19,17 +19,17 @@ export const useLogin = () => {
         })
 
         const json = await response.json();
+        console.log(json)
 
         if (!response.ok) {
-            console.log("naah")
             setIsLoading(false);
             setError(json.error);
         }
 
         if (response.ok) {
-            console.log("loggedin")
-            console.log(json)
-            console.log(JSON.stringify(json))
+            // console.log("loggedin")
+            // console.log(json)
+            // console.log(JSON.stringify(json))
             localStorage.setItem('user', JSON.stringify(json));
             dispatch({ type: 'LOGIN', payload: json })
             setIsLoading(false);

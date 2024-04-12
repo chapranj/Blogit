@@ -16,15 +16,26 @@ export default function Details() {
     const [message, setMessage] = useState('');
     const { user } = useAuth();
     const [ticketPosts, setTicketPosts] = useState([]);
+    const [isAdmin, setIsAdmin] = useState(false)
 
     useEffect(
         () => {
-
-            loadBlog(blogId);
-            loadTicketPosts(blogId);
-
+            if (!user) {
+                navigate('/login')
+            }
+            else {
+                loadBlog(blogId);
+                loadTicketPosts(blogId);
+                checkAuthorization()
+            }
         }, [blogId]
     );
+
+    function checkAuthorization() {
+        setIsAdmin(user.role === 'admin');
+
+        console.log(isAdmin)
+    }
 
     async function loadTicketPosts(id) {
         try {
@@ -33,7 +44,6 @@ export default function Details() {
                     'Authorization': `Bearer ${user.token}`
                 }
             })
-            console.log("hi");
             console.log(response.data);
             setTicketPosts(response.data);
         }
@@ -77,8 +87,8 @@ export default function Details() {
 
     async function handleSubmitMessage() {
         try {
-            const response = await axios.post(`http://localhost:3000/blogs/ticketPost`, { ticketId: blogId, content: message , postedBy: user.email} , {
-                headers : {
+            const response = await axios.post(`http://localhost:3000/blogs/ticketPost`, { ticketId: blogId, content: message, postedBy: user.userId }, {
+                headers: {
                     'Authorization': `Bearer ${user.token}`
                 }
             })
@@ -102,7 +112,7 @@ export default function Details() {
     async function handleDeletePost(id) {
         try {
             await axios.delete(`http://localhost:3000/blogs/ticketPost/${id}`, {
-                headers : {
+                headers: {
                     'Authorization': `Bearer ${user.token}`
                 }
             })
@@ -122,17 +132,23 @@ export default function Details() {
                         <h2 className="text-3xl font-semibold mb-4">
                             {blog.title}
                         </h2>
-                        <div className="content text-gray-700">
-                            <p>
-                                <img src={blog.snippet} alt="" />
-                            </p>
+                        <div className="flex flex-wrap">
+                            {blog.snippet.map((image, index) => (
+                                <div key={index} className="w-1/2 p-1">
+                                    <img
+                                        src={image}
+                                        alt={`Image ${index}`}
+                                        className="w-full h-auto"
+                                    />
+                                </div>
+                            ))}
                         </div>
                         <div className="content text-gray-700">
                             <p>
                                 {blog.body}
                             </p>
                         </div>
-                        <button className="delete mt-4 bg-red-500 text-white font-semibold px-4 py-2 rounded hover:bg-red-600" onClick={() => handleDelete(blog._id)}>Delete</button>
+                        {isAdmin && <button className="delete mt-4 bg-red-500 text-white font-semibold px-4 py-2 rounded hover:bg-red-600" onClick={() => handleDelete(blog._id)}>Delete</button>}
                     </>
                 ) : (
                     <p>Loading...</p>
@@ -144,8 +160,8 @@ export default function Details() {
                             <li key={post._id} className="mb-4">
                                 <div className="message">
                                     <p className="text-gray-700">{post.content}</p>
-                                    <p className="text-sm text-gray-500">Created at: {new Date(post.createdAt).toLocaleString()} Posted By:{post.postedBy}</p>
-                                    <button className="delete mt-2.5 bg-red-200 text-white font-semibold px-4 py-2 rounded hover:bg-red-600" onClick={() => handleDeletePost(post._id)}>Delete</button>
+                                    <p className="text-sm text-gray-500">Created at: {new Date(post.createdAt).toLocaleString()} Posted By:{post.postedBy.email}</p>
+                                    {isAdmin && <button className="delete mt-2.5 bg-red-200 text-white font-semibold px-4 py-2 rounded hover:bg-red-600" onClick={() => handleDeletePost(post._id)}>Delete</button>}
                                 </div>
                             </li>
                         ))}
