@@ -16,7 +16,7 @@ const corsOptions = {
 app.use(cors(corsOptions))
 app.use(bodyParser.json());
 
-const dbURI = 'mongodb+srv://test1212:test1212@cluster0.tzrxohd.mongodb.net/node-tuts?retryWrites=true&w=majority&appName=Cluster0'
+const dbURI = 'MONGOURIIII'
 
 async function populateRoles() {
 
