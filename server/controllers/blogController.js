@@ -1,5 +1,6 @@
 const { BlogObj, TicketPostObj } = require('../models/blog');
-const upload = require('../app')
+const upload = require('../app');
+const { update } = require('lodash');
 
 const blog_index = (req, res) => {
     BlogObj.find()
@@ -71,11 +72,11 @@ const deleteTicketPost = (req, res) => {
 }
 
 const blogPost = (req, res) => {
-    const { title, snippet, body, assignedTo, createdBy } = req.body;
+    const { title, snippet, body, assignedTo, createdBy, priority, category } = req.body;
 
     console.log(req.body)
     // const snippets = req.files.map(file=>({filename:file.filename, path:file.path}));
-    if (!title || !body || !assignedTo || !createdBy) {
+    if (!title || !body || !assignedTo || !createdBy || !priority || !category) {
         return res.status(400).json({ error: "Missing required fields!" })
     }
     const blog = new BlogObj({
@@ -83,7 +84,9 @@ const blogPost = (req, res) => {
         snippet: snippet,
         body: body,
         assignedTo: assignedTo,
-        createdBy: createdBy
+        createdBy: createdBy,
+        priority: priority,
+        category: category
     });
     console.log("yes")
     console.log(blog)
@@ -130,6 +133,24 @@ const deleteBlogById = async (req, res) => {
     }
 }
 
+const updateBlog = async (req, res) => {
+    const id = req.params.id;
+    const updated = req.body;
+
+    try {
+        const updatedBlog = await BlogObj.findByIdAndUpdate(id, updated, { new: true });
+        if (!updatedBlog) {
+            return res.status(404).json({ message: "Blog not found" });
+        }
+        res.status(200).json(updatedBlog);
+    }
+    catch (error) {
+        console.error("Error updating blog:", error);
+        res.status(500).json({ message: "Internal server error" });
+
+    }
+}
+
 module.exports = {
     blog_index,
     blogPost,
@@ -137,5 +158,6 @@ module.exports = {
     deleteBlogById,
     postTicketPost,
     getTicketPost,
-    deleteTicketPost
+    deleteTicketPost,
+    updateBlog
 }

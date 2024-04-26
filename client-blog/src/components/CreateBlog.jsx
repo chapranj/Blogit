@@ -39,16 +39,19 @@ export default function CreateBlog() {
   const ticketUploadValidation = Yup.object().shape({
     title: Yup.string().required('Title is required!'),
     body: Yup.string().required('Please give a description!'),
-    assignedTo: Yup.string().required('Assign this ticket to someone!')
+    assignedTo: Yup.string().required('Assign this ticket to someone!'),
+    category: Yup.string().required('Select a category for the ticket!'),
+    priority: Yup.string().required('Select a priority for this ticket!')
   });
-
 
   const formik = useFormik({
     initialValues: {
       title: '',
       snippet: [],
       assignedTo: '',
-      body: ''
+      body: '',
+      category: '',
+      priority: ''
     },
 
     validationSchema: ticketUploadValidation,
@@ -59,9 +62,11 @@ export default function CreateBlog() {
       const formData = new FormData();
       formData.append("title", values.title);
       formData.append("body", values.body);
-      values.snippet.forEach((file) => { formData.append("snippet", file) })
+      values.snippet.forEach((file) => { formData.append("snippet", file) });
       formData.append("assignedTo", values.assignedTo);
-      formData.append("createdBy", user.userId)
+      formData.append("createdBy", user.userId);
+      formData.append("category", values.category);
+      formData.append("priority", values.priority);
 
       try {
         const response = await axios.post(`http://localhost:3000/blogs`, formData, {
@@ -84,52 +89,63 @@ export default function CreateBlog() {
   }, [formik.errors]);
 
   return (
-    <div className="container mx-auto m-5">
-      <h1 className="text-3xl font-semibold mb-4">Enter Ticket Details</h1>
+    <div className="container mx-auto my-5 p-8 bg-white rounded-lg shadow-lg">
+      <h1 className="text-3xl font-semibold mb-8">Enter Blog Details</h1>
       <form onSubmit={formik.handleSubmit} encType="multipart/form-data">
         <div className="mb-4">
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+          <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+            Title
+          </label>
           <input
             id="title"
-            {...formik.getFieldProps('title')}
+            {...formik.getFieldProps("title")}
             type="text"
-            className="form-input px-4 py-2 rounded border focus:outline-none focus:border-indigo-600"
+            className="form-input mt-2"
           />
+          {formik.touched.title && formik.errors.title ? (
+            <div className="text-red-500">{formik.errors.title}</div>
+          ) : null}
         </div>
-        {formik.errors.title && <div>{formik.errors.title}</div>}
         <div className="mb-4">
-          <label htmlFor="snippet" className="block text-sm font-medium text-gray-700 mb-2">Snippet</label>
+          <label htmlFor="snippet" className="block text-sm font-medium text-gray-700">
+            Snippet
+          </label>
           <input
             id="snippet"
             name="snippet"
             type="file"
             multiple
             onChange={(e) => {
-              setPreviews([])
-              let imageArray = []
+              setPreviews([]);
+              let imageArray = [];
               Array.from(e.target.files).forEach((file) => {
                 let reader = new FileReader();
-
                 reader.onload = () => {
                   if (reader.readyState === 2) {
-                    // console.log(reader.result);
-                    setPreviews(
-                      (prevPreviews) => [...prevPreviews, reader.result]
-                    )
+                    setPreviews((prevPreviews) => [...prevPreviews, reader.result]);
                     imageArray.push(reader.result);
                   }
                 };
                 reader.readAsDataURL(file);
               });
               formik.setFieldValue("snippet", imageArray);
-              console.log(imageArray)
             }}
-            className="form-input"
+            className="form-input mt-2"
           />
         </div>
         {previews.map((preview, index) => (
-          <img key={index} src={preview} width="100" height="30" className="mr-4" />
+          <img key={index} src={preview} width="100" height="30" className="mr-4" alt={`Preview ${index}`} />
         ))}
+        {/* <div className="mb-4">
+          <label htmlFor="body" className="block text-sm font-medium text-gray-700">
+            Body
+          </label>
+          
+          {formik.touched.body && formik.errors.body ? (
+            <div className="text-red-500">{formik.errors.body}</div>
+          ) : null}
+        </div> */}
+
         <div className="mb-4">
           <label htmlFor="body" className="block text-sm font-medium text-gray-700 mb-2">Body</label>
           <textarea
@@ -139,12 +155,61 @@ export default function CreateBlog() {
             className="form-textarea px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:border-indigo-600 text-base"
           ></textarea>
         </div>
-        {formik.errors.body && <div>{formik.errors.body}</div>}
-        <div>
-          <label htmlFor="assignedTo">Assign To</label>
-          <select name="assignedTo" 
-          id="assignedTo" 
-          {...formik.getFieldProps('assignedTo')}>
+        {formik.touched.body && formik.errors.body ? (
+          <div className="text-red-500">{formik.errors.body}</div>
+        ) : null}
+
+        <div className="mb-4">
+          <label htmlFor="category" className="block text-sm font-medium text-gray-700">
+            Select Category
+          </label>
+          <select name="category" id="category"
+            {...formik.getFieldProps("category")}
+            className="form-select mt-2"
+          >
+            <option value="" disabled hidden>
+              Select Category
+            </option>
+            <option value="Bug">Bug</option>
+            <option value="Feature">Feature</option>
+            <option value="Enhancement">Enhancement</option>
+            <option value="Other">Other</option>
+          </select>
+          {formik.touched.category && formik.errors.category ? (
+            <div className="text-red-500">{formik.errors.assignedTo}</div>
+          ) : null}
+        </div>
+
+        <div className="mb-4">
+          <label htmlFor="priority" className="block text-sm font-medium text-gray-700">
+            Select Priority
+          </label>
+          <select name="priority" id="priority"
+            {...formik.getFieldProps("priority")}
+            className="form-select mt-2"
+          >
+            <option value="" disabled hidden>
+              Select Priority
+            </option>
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+          </select>
+          {formik.touched.priority && formik.errors.priority ? (
+            <div className="text-red-500">{formik.errors.priority}</div>
+          ) : null}
+        </div>
+
+
+        <div className="mb-4">
+          <label htmlFor="assignedTo" className="block text-sm font-medium text-gray-700">
+            Assign To
+          </label>
+          <select
+            id="assignedTo"
+            {...formik.getFieldProps("assignedTo")}
+            className="form-select mt-2"
+          >
             <option value="" disabled hidden>
               Select Member
             </option>
@@ -154,9 +219,12 @@ export default function CreateBlog() {
               </option>
             ))}
           </select>
-          {formik.errors.assignedTo && selectedUser === '' && <div>{formik.errors.assignedTo}</div>}
+          {formik.touched.assignedTo && formik.errors.assignedTo ? (
+            <div className="text-red-500">{formik.errors.assignedTo}</div>
+          ) : null}
         </div>
-        <div className="mb-4 flex items-center">
+
+        <div className="flex items-center">
           <button
             type="submit"
             className="px-6 py-3 bg-indigo-600 text-white rounded hover:bg-indigo-500 focus:outline-none focus:bg-indigo-700 transition duration-300 ease-in-out"
@@ -166,6 +234,5 @@ export default function CreateBlog() {
         </div>
       </form>
     </div>
-
   );
 }

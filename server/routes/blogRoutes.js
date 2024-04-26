@@ -32,6 +32,8 @@ router.get('/blogs/:id', blogController.getBlogById);
 router.delete('/blogs/:id', requireRole('admin'), blogController.deleteBlogById);
 router.delete('/blogs/ticketPost/:id', requireRole('admin'), blogController.deleteTicketPost)
 
+router.put('/blogs/:id',blogController.updateBlog);
+
 // router.post('/blogs', upload.single('snippet'), blogController.blogPost);
 // router.delete('/blogs/:id', blogController.deleteBlogById);
 // // Other routes (not requiring specific roles)

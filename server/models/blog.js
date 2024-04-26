@@ -24,6 +24,14 @@ const blogSchema = new Schema({
         type: Schema.Types.ObjectId, 
         required: true,
         ref: 'User'
+    },
+    category:{
+       type: String,
+       enum: ['Bug', 'Feature', 'Enhancement', 'Other']
+    },
+    priority:{
+       type: String,
+       enum: ['Low', 'Medium', 'High']
     }
 }, {timestamps: true});
 

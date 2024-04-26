@@ -14,9 +14,11 @@ const corsOptions = {
 }
 
 app.use(cors(corsOptions))
-app.use(bodyParser.json());
+app.use(bodyParser.json({limit: '10mb'}));
+app.use(bodyParser.urlencoded({extended: true, limit: '10mb'}))
 
-const dbURI = 'MONGOURIIII'
+
+const dbURI = 'MONGOURI'
 
 async function populateRoles() {
 
